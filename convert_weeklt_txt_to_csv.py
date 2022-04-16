@@ -11,8 +11,8 @@ def read_txt(fname):
 
 def main():
     i = 1
-    root = '/media/nimashiri/SSD/kurtis_data/c'
-    files = sorted(os.listdir('/media/nimashiri/SSD/kurtis_data/c'))
+    root = 'path/to/your/data/files' # please change this directory
+    files = sorted(os.listdir(root))
     for file in files:
         header = ['domain_name', 'app_name', 'developer', 'email', 'price', 'last_update', 'category', 'size', 'number_of_installs', 'version', 'compatibility', 'maturity_rating', 'app_store_purchases', 'rating', 'number_of_ratings', 'five_star', 'four_star', 'three_star', 'two_star', 'one_star', 'link','description', 'release_text']
         print('Analyzing {}, {}/{}'.format(file, i, len(files)))
