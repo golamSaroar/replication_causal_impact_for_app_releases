@@ -61,6 +61,8 @@ def create_target_set(df, target_app_ids):
 
     target_df = target_apps.sort_values('week_number').groupby(['id', 'last_update']).first().reset_index().rename(
         columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(['app_id', 'release_week'])
+
+    target_df = target_df[target_df.release_week != 1]  # release_week = 1 aren't really releases
     target_df.insert(0, 'release_id', np.arange(1, target_df.shape[0] + 1))
 
     target_metrics_df = target_df[['release_id', 'app_id', 'precise_rating']]  # will change later
