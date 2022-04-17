@@ -33,6 +33,11 @@ def get_precise_rating(df):
             row.number_of_ratings), 4) if string_to_int(row.number_of_ratings) else 0, axis=1)
 
 
+def get_number_of_ratings_per_week(df):
+    df['number_of_ratings'] = df['number_of_ratings'].apply(lambda x: string_to_int(x))
+    return df.groupby('id')['number_of_ratings'].diff().fillna(0)
+
+
 def get_mean_difference_in_list(_list):
     if len(_list) == 1:
         return 0
@@ -110,10 +115,13 @@ def get_full_set():
 
 def get_sorted_full_set():
     df_full_set = pd.read_csv("data/full_set.csv")
-    df_full_set["precise_rating"] = get_precise_rating(df_full_set)
 
     df_full_set.insert(0, 'id', pd.factorize(df_full_set.domain_name)[0] + 1)
-    df_full_set.sort_values(by=['id'], ascending=True, inplace=True)
+    df_full_set.sort_values(by=['id', 'week_number'], ascending=True, inplace=True)
+
+    df_full_set["precise_rating"] = get_precise_rating(df_full_set)
+    df_full_set["number_of_ratings_per_week"] = get_number_of_ratings_per_week(df_full_set)
+
     df_full_set.to_csv("data/sorted_full_set.csv", index=False)
     print("Added ID column to the full set, sorted by ID, and saved to csv")
 
