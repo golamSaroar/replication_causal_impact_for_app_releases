@@ -42,14 +42,15 @@ def create_control_set(df, target_app_ids):
 def create_target_set(df, target_app_ids):
     target_apps = df[df['id'].isin(target_app_ids)]
 
-    target_meta_df = target_apps.sort_values('week_number').groupby(['id', 'last_update']).first().reset_index()[
-        ['id', 'week_number']].rename(columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(
-        ['app_id', 'release_week'])
+    target_df = target_apps.sort_values('week_number').groupby(['id', 'last_update']).first().reset_index().rename(
+        columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(['app_id', 'release_week'])
+    target_df.insert(0, 'release_id', np.arange(1, target_df.shape[0] + 1))
 
-    target_meta_df.insert(0, 'release_id', np.arange(1, target_meta_df.shape[0] + 1))
+    target_metrics_df = target_df[['release_id', 'app_id', 'precise_rating']]  # will change later
+    target_metrics_df.to_csv("data/target_set.csv", index=False)
+
+    target_meta_df = target_df[['release_id', 'app_id', 'release_week']]
     target_meta_df.to_csv("data/target_meta.csv", index=False)
-
-    # TODO: create target_set
 
 
 def get_full_set():
