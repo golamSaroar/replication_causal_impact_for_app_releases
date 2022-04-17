@@ -16,6 +16,22 @@ def read_txt(filename):
     return data
 
 
+def string_to_int(s):
+    # converts a comma separated string to int, i.e "1,500" to 1500
+    try:
+        number_string = s.replace(',', '')
+        return int(number_string)
+    except AttributeError:
+        return 0
+
+
+def get_precise_rating(df):
+    return df.apply(
+        lambda row: round((string_to_int(row.five_star) * 5 + string_to_int(row.four_star) * 4 + string_to_int(
+            row.three_star) * 3 + string_to_int(row.two_star) * 2 + string_to_int(row.one_star) * 1) / string_to_int(
+            row.number_of_ratings), 4) if string_to_int(row.number_of_ratings) else 0, axis=1)
+
+
 def create_control_set(df, target_app_ids):
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
@@ -48,6 +64,8 @@ def get_full_set():
 
 def get_sorted_full_set():
     df_full_set = pd.read_csv("data/full_set.csv")
+    df_full_set["precise_rating"] = get_precise_rating(df_full_set)
+
     df_full_set.insert(0, 'id', pd.factorize(df_full_set.domain_name)[0] + 1)
     df_full_set.sort_values(by=['id'], ascending=True, inplace=True)
     df_full_set.to_csv("data/sorted_full_set.csv", index=False)
