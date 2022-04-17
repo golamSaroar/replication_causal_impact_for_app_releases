@@ -188,20 +188,20 @@ def get_control_and_target_sets():
 
 if __name__ == '__main__':
     get_control_and_target_sets()
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
-    # parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
-    # parser.add_argument("--get_sorted_full_set", action="store_true", help="Add id column, sort by it, and save to csv")
-    # parser.add_argument("--get_median_release_interval", action="store_true", help="Median interval between releases")
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
+    parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
+    parser.add_argument("--get_sorted_full_set", action="store_true", help="Add id column, sort by it, and save to csv")
+    parser.add_argument("--get_median_release_interval", action="store_true", help="Median interval between releases")
+    args = parser.parse_args()
 
-    # if args.get_weekly_data:
-    #     get_weekly_data()
-    # elif args.get_full_set:
-    #     get_full_set()
-    # elif args.get_sorted_full_set:
-    #     get_sorted_full_set()
-    # elif args.get_median_release_interval:
-    #     get_median_release_interval()
-    # else:
-    #     get_control_and_target_sets()
+    if args.get_weekly_data:
+        get_weekly_data()
+    elif args.get_full_set:
+        get_full_set()
+    elif args.get_sorted_full_set:
+        get_sorted_full_set()
+    elif args.get_median_release_interval:
+        get_median_release_interval()
+    else:
+        get_control_and_target_sets()
