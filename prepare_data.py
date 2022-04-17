@@ -65,8 +65,9 @@ def get_pre_and_post_period(df):
 
 
 def create_control_set(df, target_app_ids):
+    columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
     control_apps = df[~df['id'].isin(target_app_ids)]
-    control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
+    control_df = control_apps[columns].sort_values(["id", "week_number"])
     control_df.to_csv("data/control_set.csv", index=False)
 
 
