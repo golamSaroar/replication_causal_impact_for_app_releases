@@ -40,6 +40,14 @@ def get_full_set():
             writer_object.writerow(item)
 
 
+def get_sorted_full_set():
+    df_full_set = pd.read_csv("data/full_set.csv")
+    df_full_set.insert(0, 'id', pd.factorize(df_full_set.domain_name)[0] + 1)
+    df_full_set.sort_values(by=['id'], ascending=True, inplace=True)
+    df_full_set.to_csv("data/sorted_full_set.csv", index=False)
+    print("Added ID column to the full set, sorted by ID, and saved to csv")
+
+
 def get_weekly_data():
     i = 1
     root = "/path/to/kurtis_data/c"  # change this to path to kurtis data
@@ -68,11 +76,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
+    parser.add_argument("--get_sorted_full_set", action="store_true", help="Add id column, sort by it, and save to csv")
     args = parser.parse_args()
 
     if args.get_weekly_data:
         get_weekly_data()
     elif args.get_full_set:
         get_full_set()
+    elif args.get_sorted_full_set:
+        get_sorted_full_set()
     else:
         print("You have not passed any argument. Type --help or -h to see the accepted arguments.")
