@@ -16,6 +16,12 @@ def read_txt(filename):
     return data
 
 
+def create_control_set(df, target_app_ids):
+    control_apps = df[~df['id'].isin(target_app_ids)]
+    control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
+    control_df.to_csv("data/control_set.csv", index=False)
+
+
 def get_full_set():
     full_set_header = header + ['week_number']
 
@@ -72,6 +78,15 @@ def get_weekly_data():
         i += 1
 
 
+def get_control_and_target_sets():
+    df = pd.read_csv("data/sorted_full_set.csv")
+    releases = df.groupby('id').apply(lambda x: x['last_update'].unique()).reset_index()
+    target_app_ids = releases.loc[releases[0].str.len() > 1, 'id'].tolist()
+
+    create_control_set(df, target_app_ids)
+    # TODO: create target set
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
@@ -86,4 +101,4 @@ if __name__ == '__main__':
     elif args.get_sorted_full_set:
         get_sorted_full_set()
     else:
-        print("You have not passed any argument. Type --help or -h to see the accepted arguments.")
+        get_control_and_target_sets()
