@@ -54,6 +54,11 @@ def get_median_release_interval():
     media_release_interval_df.to_csv("data/median_release_interval.csv", index=False)
 
 
+def get_pre_and_post_period(df):
+    # TODO: write code to get pre_and post period
+    return df
+
+
 def create_control_set(df, target_app_ids):
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
@@ -73,6 +78,9 @@ def create_target_set(df, target_app_ids):
     target_metrics_df.to_csv("data/target_set.csv", index=False)
 
     target_meta_df = target_df[['release_id', 'app_id', 'release_week']]
+
+    target_meta_df = get_pre_and_post_period(target_meta_df)
+
     target_meta_df.to_csv("data/target_meta.csv", index=False)
 
 
