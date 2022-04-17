@@ -94,11 +94,25 @@ def get_pre_and_post_period(df):
     return pd.DataFrame(f, columns=['release_id', 'app_id', 'release_week', 'pre_period', 'post_period'])
 
 
+def create_control_set_for_each_metric(df):
+    Path("data/control").mkdir(parents=True, exist_ok=True)
+
+    metrics = ['precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
+
+    for metric in metrics:
+        pivoted = df.pivot(index='week_number', columns='id', values=metric).fillna(method='ffill').reset_index()
+        pivoted.columns.name = None
+
+        pivoted.to_csv(f"data/control/{metric}.csv", index=False)
+
+
 def create_control_set(df, target_app_ids):
     columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps[columns].sort_values(["id", "week_number"])
     control_df.to_csv("data/control_set.csv", index=False)
+
+    create_control_set_for_each_metric(control_df)
 
 
 def create_target_set(df, target_app_ids):
