@@ -1,11 +1,9 @@
 import os
 from csv import writer
-from wsgiref import headers
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import argparse
-
 
 header = ['domain_name', 'app_name', 'developer', 'email', 'price', 'last_update', 'category', 'size',
           'number_of_installs', 'version', 'compatibility', 'maturity_rating', 'app_store_purchases', 'rating',
@@ -62,12 +60,11 @@ def get_median_release_interval():
 
 
 def get_pre_and_post_period(df):
-
     u_app_id = df['app_id'].value_counts().to_dict()
 
     mem = u_app_id.copy()
 
-    for k,v in mem.items():
+    for k, v in mem.items():
         mem[k] = 0
 
     f = []
@@ -77,17 +74,17 @@ def get_pre_and_post_period(df):
             # last case
             if mem[df.iloc[i, 1]] == u_app_id[df.iloc[i, 1]]:
                 x = df.iloc[i, :].tolist()
-                x.append(df.iloc[i-1, 2])
+                x.append(df.iloc[i - 1, 2])
                 x.append(52)
             # first case
             elif mem[df.iloc[i, 1]] == 1:
                 x = df.iloc[i, :].tolist()
                 x.append(1)
-                x.append(df.iloc[i+1, 2]-1)
+                x.append(df.iloc[i + 1, 2] - 1)
             else:
                 x = df.iloc[i, :].tolist()
-                x.append(df.iloc[i-1, 2])
-                x.append(df.iloc[i+1, 2]-1)
+                x.append(df.iloc[i - 1, 2])
+                x.append(df.iloc[i + 1, 2] - 1)
             f.append(x)
         else:
             x = df.iloc[i, :].tolist()
@@ -193,10 +190,7 @@ def get_control_and_target_sets():
     create_target_set(df, target_app_ids)
 
 
-
-
 if __name__ == '__main__':
-    get_control_and_target_sets()
     parser = argparse.ArgumentParser()
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
