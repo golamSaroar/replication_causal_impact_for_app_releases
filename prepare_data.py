@@ -33,21 +33,25 @@ def get_precise_rating(df):
             row.number_of_ratings), 4) if string_to_int(row.number_of_ratings) else 0, axis=1)
 
 
+def get_mean_difference_in_list(_list):
+    if len(_list) == 1:
+        return 0
+
+    diffs = np.diff(np.array(sorted(_list)))
+    return round(sum(diffs) / len(diffs), 4)
+
+
 def get_median_release_interval():
     target_metadata = pd.read_csv("data/target_meta.csv")
 
-    median_interval = []
-    for i in range(len(target_metadata.index)):
-        x = list(target_metadata.loc[target_metadata["app_id"] == target_metadata.iloc[i, 1], "release_week"])
-        if len(x) == 1:
-            median_interval.append(0)
-        else:
-            median_interval.append(np.median([j - i for i, j in zip(x[:-1], x[1:])]))
+    unique_apps_df = pd.DataFrame({'app_id': target_metadata.app_id.unique()})
+    unique_apps_df['release_weeks'] = [
+        list(set(target_metadata['release_week'].loc[target_metadata['app_id'] == x['app_id']]))
+        for _, x in unique_apps_df.iterrows()]
+    unique_apps_df['median_release_interval'] = unique_apps_df['release_weeks'].apply(get_mean_difference_in_list)
 
-    target_metadata['median_release_interval'] = median_interval
-    median_release_interval_df = target_metadata.groupby(["app_id", "median_release_interval"]).first().reset_index()[
-        ["app_id", "median_release_interval"]]
-    median_release_interval_df.to_csv("data/median_release_interval.csv", index=False)
+    media_release_interval_df = unique_apps_df.drop('release_weeks', axis=1)
+    media_release_interval_df.to_csv("data/median_release_interval.csv", index=False)
 
 
 def create_control_set(df, target_app_ids):
