@@ -1,6 +1,7 @@
 import os
 from csv import writer
 import pandas as pd
+import numpy as np
 from pathlib import Path
 import argparse
 
@@ -36,6 +37,19 @@ def create_control_set(df, target_app_ids):
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
     control_df.to_csv("data/control_set.csv", index=False)
+
+
+def create_target_set(df, target_app_ids):
+    target_apps = df[df['id'].isin(target_app_ids)]
+
+    target_meta_df = target_apps.sort_values('week_number').groupby(['id', 'last_update']).first().reset_index()[
+        ['id', 'week_number']].rename(columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(
+        ['app_id', 'release_week'])
+
+    target_meta_df.insert(0, 'release_id', np.arange(1, target_meta_df.shape[0] + 1))
+    target_meta_df.to_csv("data/target_meta.csv", index=False)
+
+    # TODO: create target_set
 
 
 def get_full_set():
@@ -102,7 +116,7 @@ def get_control_and_target_sets():
     target_app_ids = releases.loc[releases[0].str.len() > 1, 'id'].tolist()
 
     create_control_set(df, target_app_ids)
-    # TODO: create target set
+    create_target_set(df, target_app_ids)
 
 
 if __name__ == '__main__':
