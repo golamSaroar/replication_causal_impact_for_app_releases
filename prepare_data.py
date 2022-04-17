@@ -33,6 +33,23 @@ def get_precise_rating(df):
             row.number_of_ratings), 4) if string_to_int(row.number_of_ratings) else 0, axis=1)
 
 
+def get_median_release_interval():
+    target_metadata = pd.read_csv("data/target_meta.csv")
+
+    median_interval = []
+    for i in range(len(target_metadata.index)):
+        x = list(target_metadata.loc[target_metadata["app_id"] == target_metadata.iloc[i, 1], "release_week"])
+        if len(x) == 1:
+            median_interval.append(0)
+        else:
+            median_interval.append(np.median([j - i for i, j in zip(x[:-1], x[1:])]))
+
+    target_metadata['median_release_interval'] = median_interval
+    median_release_interval_df = target_metadata.groupby(["app_id", "median_release_interval"]).first().reset_index()[
+        ["app_id", "median_release_interval"]]
+    median_release_interval_df.to_csv("data/median_release_interval.csv", index=False)
+
+
 def create_control_set(df, target_app_ids):
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
@@ -125,6 +142,7 @@ if __name__ == '__main__':
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
     parser.add_argument("--get_sorted_full_set", action="store_true", help="Add id column, sort by it, and save to csv")
+    parser.add_argument("--get_median_release_interval", action="store_true", help="Median interval between releases")
     args = parser.parse_args()
 
     if args.get_weekly_data:
@@ -133,5 +151,7 @@ if __name__ == '__main__':
         get_full_set()
     elif args.get_sorted_full_set:
         get_sorted_full_set()
+    elif args.get_median_release_interval:
+        get_median_release_interval()
     else:
         get_control_and_target_sets()
