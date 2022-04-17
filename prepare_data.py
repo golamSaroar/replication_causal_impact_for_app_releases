@@ -89,7 +89,9 @@ def get_pre_and_post_period(df):
             x.append(1)
             x.append(52)
             f.append(x)
-    return pd.DataFrame(f, columns=['release_id', 'app_id', 'release_week', 'pre_period', 'post_period'])
+    df = pd.DataFrame(f, columns=['release_id', 'app_id', 'release_week', 'pre_period', 'post_period'])
+    df.to_csv("data/sample_pre_and_post.csv", index=False)
+    return df
 
 
 def create_control_set(df, target_app_ids):
@@ -187,7 +189,6 @@ def get_control_and_target_sets():
 
 
 if __name__ == '__main__':
-    get_control_and_target_sets()
     parser = argparse.ArgumentParser()
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
