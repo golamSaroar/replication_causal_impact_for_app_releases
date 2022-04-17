@@ -6,7 +6,6 @@ import numpy as np
 from pathlib import Path
 import argparse
 
-
 header = ['domain_name', 'app_name', 'developer', 'email', 'price', 'last_update', 'category', 'size',
           'number_of_installs', 'version', 'compatibility', 'maturity_rating', 'app_store_purchases', 'rating',
           'number_of_ratings', 'five_star', 'four_star', 'three_star', 'two_star', 'one_star', 'link', 'description',
@@ -35,6 +34,11 @@ def get_precise_rating(df):
             row.number_of_ratings), 4) if string_to_int(row.number_of_ratings) else 0, axis=1)
 
 
+def get_number_of_ratings_per_week(df):
+    df['number_of_ratings'] = df['number_of_ratings'].apply(lambda x: string_to_int(x))
+    return df.groupby('id')['number_of_ratings'].diff().fillna(0)
+
+
 def get_mean_difference_in_list(_list):
     if len(_list) == 1:
         return 0
@@ -57,12 +61,11 @@ def get_median_release_interval():
 
 
 def get_pre_and_post_period(df):
-
     u_app_id = df['app_id'].value_counts().to_dict()
 
     mem = u_app_id.copy()
 
-    for k,v in mem.items():
+    for k, v in mem.items():
         mem[k] = 0
 
     f = []
@@ -72,17 +75,17 @@ def get_pre_and_post_period(df):
             # last case
             if mem[df.iloc[i, 1]] == u_app_id[df.iloc[i, 1]]:
                 x = df.iloc[i, :].tolist()
-                x.append(df.iloc[i-1, 2])
+                x.append(df.iloc[i - 1, 2])
                 x.append(52)
             # first case
             elif mem[df.iloc[i, 1]] == 1:
                 x = df.iloc[i, :].tolist()
                 x.append(1)
-                x.append(df.iloc[i+1, 2]-1)
+                x.append(df.iloc[i + 1, 2] - 1)
             else:
                 x = df.iloc[i, :].tolist()
-                x.append(df.iloc[i-1, 2])
-                x.append(df.iloc[i+1, 2]-1)
+                x.append(df.iloc[i - 1, 2])
+                x.append(df.iloc[i + 1, 2] - 1)
             f.append(x)
         else:
             x = df.iloc[i, :].tolist()
@@ -94,10 +97,25 @@ def get_pre_and_post_period(df):
     return df
 
 
+def create_control_set_for_each_metric(df):
+    Path("data/control").mkdir(parents=True, exist_ok=True)
+
+    metrics = ['precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
+
+    for metric in metrics:
+        pivoted = df.pivot(index='week_number', columns='id', values=metric).fillna(method='ffill').reset_index()
+        pivoted.columns.name = None
+
+        pivoted.to_csv(f"data/control/{metric}.csv", index=False)
+
+
 def create_control_set(df, target_app_ids):
+    columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
     control_apps = df[~df['id'].isin(target_app_ids)]
-    control_df = control_apps.groupby('id').first().reset_index()[['id', 'domain_name']]
+    control_df = control_apps[columns].sort_values(["id", "week_number"])
     control_df.to_csv("data/control_set.csv", index=False)
+
+    create_control_set_for_each_metric(control_df)
 
 
 def create_target_set(df, target_app_ids):
@@ -145,10 +163,13 @@ def get_full_set():
 
 def get_sorted_full_set():
     df_full_set = pd.read_csv("data/full_set.csv")
-    df_full_set["precise_rating"] = get_precise_rating(df_full_set)
 
     df_full_set.insert(0, 'id', pd.factorize(df_full_set.domain_name)[0] + 1)
-    df_full_set.sort_values(by=['id'], ascending=True, inplace=True)
+    df_full_set.sort_values(by=['id', 'week_number'], ascending=True, inplace=True)
+
+    df_full_set["precise_rating"] = get_precise_rating(df_full_set)
+    df_full_set["number_of_ratings_per_week"] = get_number_of_ratings_per_week(df_full_set)
+
     df_full_set.to_csv("data/sorted_full_set.csv", index=False)
     print("Added ID column to the full set, sorted by ID, and saved to csv")
 
@@ -162,18 +183,16 @@ def get_weekly_data():
         data = []
         current_week_data = os.path.join(root, file)
         data_raw = read_txt(current_week_data)
-        data_raw = data_raw[0:1000]
-        data.append(header)
         for row in data_raw:
             x = row.split('\t')
             data.append(x)
 
         Path("data/weekly_data").mkdir(parents=True, exist_ok=True)
 
-        with open('data/weekly_data/' + str(i) + '.csv', 'w') as fd:  # change this
-            writer_object = writer(fd)
-            for x in data:
-                writer_object.writerow(x)
+        data = pd.DataFrame(data, columns=header)
+
+        data = data[['domain_name', 'price', 'last_update', 'version', 'rating', 'number_of_ratings', 'five_star', 'four_star', 'three_star', 'two_star', 'one_star']]
+        data.to_csv('data/weekly_data/' + str(i) + '.csv', index=False)
         i += 1
 
 
@@ -184,8 +203,6 @@ def get_control_and_target_sets():
 
     create_control_set(df, target_app_ids)
     create_target_set(df, target_app_ids)
-
-
 
 
 if __name__ == '__main__':
