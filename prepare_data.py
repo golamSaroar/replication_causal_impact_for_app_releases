@@ -109,6 +109,19 @@ def create_control_set_for_each_metric(df):
         pivoted.to_csv(f"data/control/{metric}.csv", index=False)
 
 
+def create_target_set_for_each_metric(df):
+    Path("data/target").mkdir(parents=True, exist_ok=True)
+
+    metrics = ['precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
+
+    for metric in metrics:
+        pivoted = df.pivot(index='week_number', columns='release_id', values=metric).fillna(
+            method='ffill').reset_index()
+        pivoted.columns.name = None
+
+        pivoted.to_csv(f"data/target/{metric}.csv", index=False)
+
+
 def create_control_set(df, target_app_ids):
     columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
     control_apps = df[~df['id'].isin(target_app_ids)]
@@ -119,22 +132,26 @@ def create_control_set(df, target_app_ids):
 
 
 def create_target_set(df, target_app_ids):
+    columns = ['id', 'week_number', 'last_update', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
     target_apps = df[df['id'].isin(target_app_ids)]
+    target_apps = target_apps[columns].sort_values('week_number')
 
-    target_df = target_apps.sort_values('week_number').groupby(['id', 'last_update']).first().reset_index().rename(
+    target_df = target_apps.groupby(['id', 'last_update']).first().reset_index().rename(
         columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(['app_id', 'release_week'])
 
     target_df = target_df[target_df.release_week != 1]  # release_week = 1 aren't really releases
     target_df.insert(0, 'release_id', np.arange(1, target_df.shape[0] + 1))
 
-    target_metrics_df = target_df[['release_id', 'app_id', 'precise_rating']]  # will change later
+    target_meta_df = target_df[['release_id', 'app_id', 'release_week']]
+    target_meta_df = get_pre_and_post_period(target_meta_df)
+    target_meta_df.to_csv("data/target_meta.csv", index=False)
+
+    target_metrics_df = pd.merge(target_meta_df, target_apps, left_on='app_id', right_on='id', how='left')
+    target_metrics_df = target_metrics_df[
+        ["release_id", "app_id", "week_number", "precise_rating", "number_of_ratings", "number_of_ratings_per_week"]]
     target_metrics_df.to_csv("data/target_set.csv", index=False)
 
-    target_meta_df = target_df[['release_id', 'app_id', 'release_week']]
-
-    target_meta_df = get_pre_and_post_period(target_meta_df)
-
-    target_meta_df.to_csv("data/target_meta.csv", index=False)
+    create_target_set_for_each_metric(target_metrics_df)
 
 
 def get_full_set():
@@ -192,6 +209,7 @@ def get_weekly_data():
         data = pd.DataFrame(data, columns=header)
 
         data = data[['domain_name', 'price', 'last_update', 'version', 'rating', 'number_of_ratings', 'five_star', 'four_star', 'three_star', 'two_star', 'one_star']]
+        
         data.to_csv('data/weekly_data/' + str(i) + '.csv', index=False)
         i += 1
 
