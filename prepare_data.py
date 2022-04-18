@@ -155,7 +155,7 @@ def create_target_set(df, target_app_ids):
 
 
 def get_full_set():
-    full_set_header = header + ['week_number']
+    full_set_header = ['domain_name', 'price', 'last_update', 'version', 'rating', 'number_of_ratings', 'five_star', 'four_star', 'three_star', 'two_star', 'one_star']
 
     root = 'data/weekly_data'
     files = sorted(os.listdir(root))
@@ -224,6 +224,7 @@ def get_control_and_target_sets():
 
 
 if __name__ == '__main__':
+    get_full_set()
     parser = argparse.ArgumentParser()
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
