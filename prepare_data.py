@@ -11,7 +11,7 @@ full_header = ['domain_name', 'app_name', 'developer', 'email', 'price', 'last_u
                'description', 'release_text']
 
 header = ['domain_name', 'price', 'last_update', 'version', 'rating', 'number_of_ratings', 'five_star', 'four_star',
-          'three_star', 'two_star', 'one_star']
+          'three_star', 'two_star', 'one_star', 'description_length']
 
 
 def read_txt(filename):
@@ -103,7 +103,7 @@ def create_control_set_for_each_metric(df):
     metrics = ['precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
 
     for metric in metrics:
-        pivoted = df.pivot(index='week_number', columns='id', values=metric).fillna(method='ffill').reset_index()
+        pivoted = df.pivot(index='week_number', columns='id', values=metric).reset_index()
         pivoted.columns.name = None
 
         pivoted.to_csv(f"data/control/{metric}.csv", index=False)
@@ -115,8 +115,7 @@ def create_target_set_for_each_metric(df):
     metrics = ['precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
 
     for metric in metrics:
-        pivoted = df.pivot(index='week_number', columns='release_id', values=metric).fillna(
-            method='ffill').reset_index()
+        pivoted = df.pivot(index='week_number', columns='release_id', values=metric).reset_index()
         pivoted.columns.name = None
 
         pivoted.to_csv(f"data/target/{metric}.csv", index=False)
@@ -195,7 +194,7 @@ def get_sorted_full_set():
 
 def get_weekly_data():
     i = 1
-    root = "/path/to/kurtis_data/c"  # change this to path to kurtis data
+    root = "/home/saroar/Downloads/kurtis_data/c"  # change this to path to kurtis data
     files = sorted(os.listdir(root))
     for file in files:
         print('Analyzing {}, {}/{}'.format(file, i, len(files)))
@@ -209,6 +208,9 @@ def get_weekly_data():
         Path("data/weekly_data").mkdir(parents=True, exist_ok=True)
 
         data = pd.DataFrame(data, columns=full_header)
+
+        data['description_length'] = data['description'].str.len()
+
         data = data[header]
         data.to_csv('data/weekly_data/' + str(i) + '.csv', index=False)
         i += 1
