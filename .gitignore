@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 
 .idea/
+
+# too large to track, also Git LFS quota reached
+data/
