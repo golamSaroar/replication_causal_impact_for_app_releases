@@ -122,7 +122,8 @@ def create_target_set_for_each_metric(df):
 
 
 def create_control_set(df, target_app_ids):
-    columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
+    columns = ['id', 'week_number', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week',
+               'description_length']
     control_apps = df[~df['id'].isin(target_app_ids)]
     control_df = control_apps[columns].sort_values(["id", "week_number"])
     control_df.to_csv("data/control_set.csv", index=False)
@@ -131,7 +132,8 @@ def create_control_set(df, target_app_ids):
 
 
 def create_target_set(df, target_app_ids):
-    columns = ['id', 'week_number', 'last_update', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week']
+    columns = ['id', 'week_number', 'last_update', 'precise_rating', 'number_of_ratings', 'number_of_ratings_per_week',
+               'description_length']
     target_apps = df[df['id'].isin(target_app_ids)]
     target_apps = target_apps[columns].sort_values('week_number')
 
@@ -149,7 +151,8 @@ def create_target_set(df, target_app_ids):
 
     target_metrics_df = pd.merge(target_meta_df, target_apps, left_on='app_id', right_on='id', how='left')
     target_metrics_df = target_metrics_df[
-        ["release_id", "app_id", "week_number", "precise_rating", "number_of_ratings", "number_of_ratings_per_week"]]
+        ["release_id", "app_id", "week_number", "precise_rating", "number_of_ratings", "number_of_ratings_per_week",
+         "description_length"]]
     target_metrics_df.to_csv("data/target_set.csv", index=False)
 
     create_target_set_for_each_metric(target_metrics_df)
