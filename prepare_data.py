@@ -51,6 +51,7 @@ def get_mean_difference_in_list(_list):
 
 def get_release_stats():
     target_metadata = pd.read_csv("data/target_meta.csv")
+    target_set = pd.read_csv("data/target_set.csv")
 
     unique_apps_df = pd.DataFrame({'app_id': target_metadata.app_id.unique()})
 
@@ -63,7 +64,15 @@ def get_release_stats():
         for _, x in unique_apps_df.iterrows()]
     unique_apps_df['median_release_interval'] = unique_apps_df['release_weeks'].apply(get_mean_difference_in_list)
 
-    release_stats_df = unique_apps_df.drop('release_weeks', axis=1)
+    unique_apps_df[["rating_start", "number_of_ratings_start"]] = target_set.groupby('app_id').first().reset_index()[
+        ["precise_rating", "number_of_ratings"]]
+    unique_apps_df[["rating_end", "number_of_ratings_end"]] = target_set.groupby('app_id').last().reset_index()[
+        ["precise_rating", "number_of_ratings"]]
+    unique_apps_df["rating_change"] = unique_apps_df['rating_end'] - unique_apps_df['rating_start']
+    unique_apps_df["number_of_ratings_change"] = unique_apps_df['number_of_ratings_end'] - unique_apps_df[
+        'number_of_ratings_start']
+
+    release_stats_df = unique_apps_df.drop(['release_weeks', 'rating_start', 'number_of_ratings_start'], axis=1)
     release_stats_df.to_csv("data/release_stats.csv", index=False)
 
 
