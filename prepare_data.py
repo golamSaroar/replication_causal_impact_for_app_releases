@@ -49,17 +49,22 @@ def get_mean_difference_in_list(_list):
     return round(sum(diffs) / len(diffs), 4)
 
 
-def get_median_release_interval():
+def get_release_stats():
     target_metadata = pd.read_csv("data/target_meta.csv")
 
     unique_apps_df = pd.DataFrame({'app_id': target_metadata.app_id.unique()})
+
+    unique_apps_df['number_of_releases'] = \
+        target_metadata.groupby("app_id")["release_id"].count().to_frame(name="number_of_releases").reset_index()[
+            ["number_of_releases"]]
+
     unique_apps_df['release_weeks'] = [
         list(set(target_metadata['release_week'].loc[target_metadata['app_id'] == x['app_id']]))
         for _, x in unique_apps_df.iterrows()]
     unique_apps_df['median_release_interval'] = unique_apps_df['release_weeks'].apply(get_mean_difference_in_list)
 
-    media_release_interval_df = unique_apps_df.drop('release_weeks', axis=1)
-    media_release_interval_df.to_csv("data/median_release_interval.csv", index=False)
+    release_stats_df = unique_apps_df.drop('release_weeks', axis=1)
+    release_stats_df.to_csv("data/release_stats.csv", index=False)
 
 
 def get_pre_and_post_period(df):
@@ -233,7 +238,7 @@ if __name__ == '__main__':
     parser.add_argument("--get_weekly_data", action="store_true", help="Get weekly data from the data source")
     parser.add_argument("--get_full_set", action="store_true", help="Get full set over all weeks")
     parser.add_argument("--get_sorted_full_set", action="store_true", help="Add id column, sort by it, and save to csv")
-    parser.add_argument("--get_median_release_interval", action="store_true", help="Median interval between releases")
+    parser.add_argument("--get_release_stats", action="store_true", help="Release count and median interval")
     args = parser.parse_args()
 
     if args.get_weekly_data:
@@ -242,7 +247,7 @@ if __name__ == '__main__':
         get_full_set()
     elif args.get_sorted_full_set:
         get_sorted_full_set()
-    elif args.get_median_release_interval:
-        get_median_release_interval()
+    elif args.get_release_stats:
+        get_release_stats()
     else:
         get_control_and_target_sets()
