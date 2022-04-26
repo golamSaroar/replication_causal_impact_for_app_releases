@@ -155,7 +155,7 @@ def create_target_set(df, target_app_ids):
         columns={'id': 'app_id', 'week_number': 'release_week'}).sort_values(['app_id', 'release_week'])
 
     # releases in week 1-3 and 50-52 don't have enough pre_period and post_period data respectively
-    target_df = target_df[(target_df.release_week > 3) | (target_df.release_week < 50)]
+    target_df = target_df[(target_df.release_week > 3) & (target_df.release_week < 50)]
     target_df = target_df[target_df["release_week"].diff() > 3]  # removing releases that are between three weeks
     target_df.insert(0, 'release_id', np.arange(1, target_df.shape[0] + 1))
 
@@ -211,7 +211,7 @@ def get_sorted_full_set():
 
 def get_weekly_data():
     i = 1
-    root = "/home/saroar/Downloads/kurtis_data/c"  # change this to path to kurtis data
+    root = "/path/to/kurtis_data/c"  # change this to path to kurtis data
     files = sorted(os.listdir(root))
     for file in files:
         print('Analyzing {}, {}/{}'.format(file, i, len(files)))
@@ -259,4 +259,8 @@ if __name__ == '__main__':
     elif args.get_release_stats:
         get_release_stats()
     else:
+        get_weekly_data()
+        get_full_set()
+        get_sorted_full_set()
         get_control_and_target_sets()
+        get_release_stats()
